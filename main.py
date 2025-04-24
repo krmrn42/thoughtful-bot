@@ -2,7 +2,6 @@ from prompt_toolkit import prompt
 from prompt_toolkit.styles import Style
 from sentence_transformers import SentenceTransformer
 import faiss
-import numpy as np
 
 # Knowledge base
 knowledge_base = {
