@@ -34,17 +34,19 @@ for q, a in knowledge_base.items():
     entries.append(a)
     entry_to_answer.append(a)
 
-# Create vector index
-embeddings = model.encode(entries, convert_to_numpy=True)
+# Vectorize and normalize
+embeddings = model.encode(entries, convert_to_numpy=True, normalize_embeddings=True)
 dimension = embeddings.shape[1]
 index = faiss.IndexFlatL2(dimension)
 index.add(embeddings)
 
 def search_response(user_query, top_k=1):
-    query_embedding = model.encode([user_query])[0].reshape(1, -1)
+    query_embedding = model.encode([user_query], convert_to_numpy=True, normalize_embeddings=True)
     distances, indices = index.search(query_embedding, top_k)
     best_match_idx = indices[0][0]
-    return entry_to_answer[best_match_idx]
+    best_distance = distances[0][0]
+    similarity = 1 - (best_distance / 2)
+    return entry_to_answer[best_match_idx], similarity
 
 def main():
     print("🤖 Welcome to Thoughtful AI Support! Ask me anything about our AI Agents.\nType 'exit' to quit.\n")
@@ -55,8 +57,8 @@ def main():
             if user_input.lower() in ['exit', 'quit']:
                 print("Agent: Goodbye! 👋")
                 break
-            response = search_response(user_input)
-            print(f"Agent: {response}\n")
+            response, similarity = search_response(user_input)
+            print(f"Agent (Similarity: {similarity:.2f}): {response}\n")
         except (KeyboardInterrupt, EOFError):
             print("\nAgent: Goodbye! 👋")
             break
